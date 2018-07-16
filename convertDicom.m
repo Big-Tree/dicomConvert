@@ -1,17 +1,22 @@
- % Only work for specific directory structure
+% Works for 13 bit images.  Alter line 43 for different bit depths
 
-%   -------Required Structure-------
-% Converts all the files in the given directory (dirSourc)
-% and outputs the images to dirData
+% Set paths
+dicomPath = uigetdir('', 'Select location of DICOM images');
+outputPath = uigetdir('', 'Select destination for converted images');
+outputPath = [outputPath, '/'];
+dicomPath = [dicomPath, '/*'];
+allFiles = dir(dicomPath);
 
 
-%dirSource = '/vol/vssp/mammo2/Will_Murphy/DATA/labeled/training/0_1/0_dicom/*.dcm' % Files to be converted
-%dirSource = '/user/HS204/wm0015/student/testImage/*'; % Directory containing all the Dicom images
-%dirData = '/user/HS204/wm0015/student/out/';
-dirSource = '/scratch/real/dcm/malignant/*'; % Directory containing all the Dicom images
 dirData = '/scratch/real/tiff/matlab/malignant/';
-allFiles = dir(dirSource);
-
+class(dirData)
+class(outputPath)
+disp(dirData)
+disp(outputPath)
+%return
+% Set output image format
+imageFormat = inputdlg('Enter output image format (tiff, png, bmp etc...)', 'Image format', [1,50]);
+fprintf('Image format: .%s\n', imageFormat{:})
 
 
 count = 0;
@@ -35,11 +40,11 @@ for i = 1:numberOfImages
     imagePath = [allFiles(i).folder, '/', allFiles(i).name];
     [dicomFile, map] = dicomread(imagePath);
     %disp(["max = " max(max(dicomFile))]); % Find bit depth        
-    correctedImage = uint16(16383 * mat2gray(dicomFile) ); %Increase the contrast by 12 times
+    correctedImage = uint16(16383 * mat2gray(dicomFile) ); % 13 bit depth
     %imshow(correctedImage);    
     [fPath, fName, fExt] = fileparts(allFiles(i).name); 
-    newFile = [dirData, fName, '.tiff'];
-    imwrite(correctedImage, newFile, 'tiff');
+    newFile = [outputPath, fName, '.', imageFormat{:}];
+    imwrite(dicomFile, newFile, imageFormat{:});
     
     progressReportFrequency = 50;
     if mod(i, progressReportFrequency) == 0
@@ -54,4 +59,4 @@ end
 
 
 
-fprintf('\n---Complete---\n');
+fprintf('Images written to %s\n---Complete---\n', outputPath);
